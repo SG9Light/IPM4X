@@ -57,8 +57,6 @@ void userport::recevice()
     //9600/8/1000=1.2Byte/ms >>> time = MAX(42)/1.2 = 35ms---->50MAX(60Byte)
     mRxQTimer->start(100);
     rxmsg = rxmsg.append(mSerial->readAll());
-    qDebug() << QStringLiteral("data received(收到的数据):") << rxmsg;
-    qDebug() << "handing thread is:" << QThread::currentThreadId();
 }
 /*数据发送*/
 void userport::send(uint8_t *_pBuf, uint16_t _usLen)
@@ -101,6 +99,7 @@ void userport::timer1ms()
     sendbuf[DATA_HIGHT] = 0;
     switch (sendtype) {
     case 1:
+        memset(&m_ups_waring[iDestination], 0, sizeof(m_ups_waring[iDestination]));
         sendbuf[ADDR_HIGHT] = WARN1_REG_ADDR>>8;
         sendbuf[ADDR_LOW] = (uint8_t)WARN1_REG_ADDR;
         sendbuf[DATA_LOW] = ALARM_LEN;
@@ -108,6 +107,7 @@ void userport::timer1ms()
         break;
 
     case 2:
+        memset(&m_ups_state[iDestination], 0, sizeof(m_ups_state[iDestination]));
         sendbuf[ADDR_HIGHT] = STATUS1_REG_ADDR>>8;
         sendbuf[ADDR_LOW] = (uint8_t)STATUS1_REG_ADDR;
         sendbuf[DATA_LOW] = STATE_LEN;
@@ -115,6 +115,7 @@ void userport::timer1ms()
         break;
 
     case 3:
+        memset(&m_ups_analog[iDestination], 0, sizeof(m_ups_analog[iDestination]));
         sendbuf[ADDR_HIGHT] = IN_VOLT_A_REG_ADDR>>8;
         sendbuf[ADDR_LOW] = (uint8_t)IN_VOLT_A_REG_ADDR;
         sendbuf[DATA_LOW] = ANALOG_LEN;

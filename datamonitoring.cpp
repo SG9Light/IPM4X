@@ -21,12 +21,11 @@ datamonitoring::~datamonitoring()
 
 void datamonitoring::modelboxinit()
 {
-    ui->modenum_comboBox->addItem("请选择");
     ui->datatype_comboBox->addItem("请选择");
 
     QStringList modelnum;
-    for (int var = 1; var < MODE_NUM; ++var) {
-        modelnum << tr("模块%1").arg(var);
+    for (int var = 0; var < MODE_NUM - 1; ++var) {
+        modelnum << tr("模块%1").arg(var + 1);
     }
     ui->modenum_comboBox->addItems(modelnum);
 
@@ -92,14 +91,29 @@ void datamonitoring::upsupdata()
         upsmodeordinal = 0;
         return;
     }
-    if(distype == ANALOG_TPYE){
-        dispanalog(ui->modenum_comboBox->currentIndex());
+    QString str = ui->datatype_comboBox->currentText();
+    if( str != "单模块变量查询"){
+        ui->tableWidget->setRowCount(24);
+        if(distype == ALARM_TPYE){
+            onealarmmonitor(str);
+        }else if(distype == STATE_TPYE){
+            onestatemonitor(str);
+        }else if(distype == ANALOG_TPYE){
+            oneanalogmonitor(str);
+        }else{
+            //Do Nothing
+        }
     }
-    else if(distype == STATE_TPYE){
-        dispsate(ui->modenum_comboBox->currentIndex());
-    }
-    else if(distype == ALARM_TPYE){
-        dispalarm(ui->modenum_comboBox->currentIndex());
+    else{
+        if(distype == ANALOG_TPYE){
+            dispanalog(ui->modenum_comboBox->currentIndex());
+        }
+        else if(distype == STATE_TPYE){
+            dispsate(ui->modenum_comboBox->currentIndex());
+        }
+        else if(distype == ALARM_TPYE){
+            dispalarm(ui->modenum_comboBox->currentIndex());
+        }
     }
     upsmodeordinal = 0;
 }
@@ -1684,7 +1698,7 @@ void datamonitoring::oneanalogmonitor(QString name)
             appendOneRow(i, "负母线电压",tempa, "V",time);
         }
     }
-    else if(name == "模块老化率"){
+    else if(name == "模块老化率AgingRate"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
 
@@ -1828,7 +1842,7 @@ void datamonitoring::on_mWaring_pushButton_clicked()
     ui->datatype_comboBox->clear();
     QList<QString> name;
     //word1
-    name <<"请选择要查看的变量" <<"风扇故障" <<"母线高压异常" <<"逆变器故障" <<"过温故障" <<"短路故障"
+    name <<"单模块变量查询" <<"风扇故障" <<"母线高压异常" <<"逆变器故障" <<"过温故障" <<"短路故障"
         <<"放电器故障" <<"整流器故障"<<"电池反接"<<"直流母线电压低" <<"硬件检测母线电压高"
        <<"输出过载延时到" <<"输出过载告警标志"<<"电池电压低" <<"电池高压故障" <<"主机CANA故障" <<"CANA故障";
     //word2
@@ -1851,7 +1865,7 @@ void datamonitoring::on_mState_pushButton_clicked()
     ui->datatype_comboBox->clear();
     QList<QString> name;
     //word1
-    name <<"请选择要查看的变量" <<"维修空开状态" <<"母线软起成功" <<"放电器状态" <<"PFC状态" <<"逆变器状态"
+    name <<"单模块变量查询" <<"维修空开状态" <<"母线软起成功" <<"放电器状态" <<"PFC状态" <<"逆变器状态"
         <<"主动软起中" <<"主动软启动完成" <<"供电状态" <<"输入相序" <<"消音状态";
     //word2
     name <<"相位跟踪标志" <<"放电器开机允许状态" <<"整流器开机允许状态" <<"直流电压等级" <<"自老化模式"
@@ -1873,16 +1887,23 @@ void datamonitoring::on_mAnalog_pushButton_clicked()
 
     ui->datatype_comboBox->clear();
     QList<QString> name;
-    name <<"请选择要查看的变量" <<"输入电压A" <<"输入电压B" <<"输入电压C" <<"输入频率"
+    name <<"单模块变量查询" <<"输入电压A" <<"输入电压B" <<"输入电压C" <<"输入频率"
         <<"输入电流A" <<"输入电流B" <<"输入电流C"<<"电池电压" <<"电池电流" <<"旁路电压"
        <<"旁路频率" <<"输出电压" <<"输出电流" <<"输出频率"<<"视在功率" <<"有功功率"
-      <<"负载百分比" <<"正母线电压" <<"负母线电压" <<"模块老化率";
+      <<"负载百分比" <<"正母线电压" <<"负母线电压" <<"模块老化率AgingRate";
     ui->datatype_comboBox->addItems(name);
     ui->datatype_comboBox->adjustItemWidth();
 }
 
 void datamonitoring::on_datatype_comboBox_textActivated(const QString &arg1)
 {
+    if(arg1 == "单模块变量查询"){
+        ui->modenum_comboBox->setEnabled(true);
+    }
+    else{
+        ui->modenum_comboBox->setEnabled(false);
+    }
+
     if(distype == 0){
         QMessageBox::critical(this,"错误","请先选择查看类型",QMessageBox::Ok);
         return;
@@ -1900,7 +1921,6 @@ void datamonitoring::on_datatype_comboBox_textActivated(const QString &arg1)
     }
 }
 
-
 void datamonitoring::on_modenum_comboBox_activated(int index)
 {
     if(distype == 0){
@@ -1908,6 +1928,7 @@ void datamonitoring::on_modenum_comboBox_activated(int index)
         return;
     }
 
+    qDebug() << index;
     if(distype == ALARM_TPYE){
         dispalarm(index);
     }else if(distype == STATE_TPYE){
@@ -1934,7 +1955,6 @@ void datamonitoring::pollpace(int n)
     ui->mpoll_progressBar->setValue(n);
     ui->mpoll_progressBar->update();
 }
-
 
 void datamonitoring::on_m_uishow_pushButton_clicked()
 {

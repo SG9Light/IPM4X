@@ -41,8 +41,6 @@ void Task::rxmsg_analyzeapp(_PORT_RXMSG *psdata)
         qDebug()<<"数据解析校验测错误";
         return;
     }
-    upsmodeordinal = psdata->data[0];
-
     switch (psdata->data[1]) {
     case FUNTION_QUERY_CODE:
         mod_03h(psdata);
@@ -62,37 +60,40 @@ void Task::rxmsg_analyzeapp(_PORT_RXMSG *psdata)
 ***********************************************************************************/
 void Task::mod_03h(_PORT_RXMSG *psdata)
 {
+    if(psdata->data[0] < 1){
+        return;
+    }
     QDateTime *updata_time = new QDateTime;
-    updatatime[psdata->data[0]] = updata_time->currentDateTime().toString("hh:mm:ss");
+    int id = psdata->data[0] - 1;
+
+    upsmodeordinal = id;    //接收到当前ID消息自动刷新当前ID数据
+    updatatime[id] = updata_time->currentDateTime().toString("hh:mm:ss");
 
     int j = 3;
     uint16_t *ups_data;
 
     if((int)psdata->messagetype == Alarm){
- //       qDebug()<<"******************************告警量******************************";
-        ups_data = (uint16_t *)&m_ups_waring[psdata->data[0]];
+        ups_data = (uint16_t *)&m_ups_waring[id];
         for (int i = 0; i < ALARM_LEN; ++i) {
             ups_data[i] = psdata->data[j] << 8 | psdata->data[j+1];
             j = j+2;
         }
 
     }else if(psdata->messagetype == State){
-//        qDebug()<<"******************************状态******************************";
-        ups_data = (uint16_t *)&m_ups_state[psdata->data[0]];
+        ups_data = (uint16_t *)&m_ups_state[id];
         for (int i = 0; i < STATE_LEN; ++i) {
             ups_data[i] = psdata->data[j] << 8 | psdata->data[j+1];
             j = j+2;
         }
 
     }else if(psdata->messagetype == Analog){
-//        qDebug()<<"******************************模拟量******************************";
-        ups_data = (uint16_t *)&m_ups_analog[psdata->data[0]];
+        ups_data = (uint16_t *)&m_ups_analog[id];
         for (int i = 0; i < ANALOG_LEN; ++i) {
             ups_data[i] = psdata->data[j] << 8 | psdata->data[j+1];
             j = j+2;
         }
     }else{
-//        qDebug()<<"******************************超出范围******************************";
+
     }
     ups_data = nullptr;
     delete updata_time;
@@ -104,7 +105,7 @@ void Task::run(){
     time.start();
     QThread::msleep(1); // 处理任务
     rxmsg_analyzeapp(&rxmsg);
- //   qDebug() <<"子线程任务处理完成，共耗时： "<<time.elapsed() <<" ms";
+    //   qDebug() <<"子线程任务处理完成，共耗时： "<<time.elapsed() <<" ms";
     emit taskflash(true);
 
 }
