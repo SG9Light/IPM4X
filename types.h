@@ -487,6 +487,7 @@ extern _UPS_ANALOG_T m_ups_analog[MODE_NUM];
 //自定义全局变量
 extern int upsmodeordinal;
 extern QString updatatime[MODE_NUM];
+extern uint8_t onlinemode[MODE_NUM];
 
 typedef struct
 {

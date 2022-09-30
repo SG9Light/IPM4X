@@ -56,12 +56,6 @@ MainWindow::MainWindow(QWidget *parent)
         QThreadPool::globalInstance()->start(mTask);
     });
 
-    connect(mTask,&Task::taskflash,this,[=](bool ok){
-        if(ok == true){
-            ui_showdata->upsupdata();
-        }
-    });
-
     //AC源设置下发
     connect(ui_acset, &AcSouceDialog::setcmd, mUserPort, &userport::ac_setvcmd);
 

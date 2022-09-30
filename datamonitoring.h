@@ -28,8 +28,6 @@ public:
 
     void disptableinit(void);
 
-    void upsupdata();
-
     void appendOneRow(int row, QString name, float value, QString unit, QString time);
 
     void dispalarm(int modelnum);
@@ -50,6 +48,8 @@ public slots:
     void pollpace(int n);
 
 private slots:
+    void upsupdata();
+
     void on_mOpenfile_pushButton_clicked();
 
     void on_mSavefile_pushButton_clicked();
@@ -79,6 +79,8 @@ private:
     Ui::datamonitoring *ui;
 
     sqlDialog *ui_Sql = new sqlDialog;
+
+    QTimer *ref = new QTimer;
 
     int distype;
 };

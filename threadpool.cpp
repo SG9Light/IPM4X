@@ -68,6 +68,7 @@ void Task::mod_03h(_PORT_RXMSG *psdata)
 
     upsmodeordinal = id;    //接收到当前ID消息自动刷新当前ID数据
     updatatime[id] = updata_time->currentDateTime().toString("hh:mm:ss");
+    onlinemode[id] = 0;
 
     int j = 3;
     uint16_t *ups_data;

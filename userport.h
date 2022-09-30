@@ -63,13 +63,9 @@ private:
 
     QByteArray rxmsg;
 
-    uint8_t Querydatatype = 0;
+    uint8_t Querydatatype;
 
-    int iDestination = 1, sendtype = 0;
-
-    int id;
-
-    int vloue;
+    uint8_t iDestination, sendtype, id, vloue;
 
 };
 

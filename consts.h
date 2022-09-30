@@ -6,7 +6,7 @@
 #define RXDATAMAXSIZE    64
 
 //并机最大台数
-#define MODE_NUM    25
+#define MODE_NUM    24
 //功能码
 #define FUNTION_QUERY_CODE           0x03   //查询码
 #define FUNTION_CONTROL_CODE         0x06   //控制码

@@ -4,7 +4,6 @@
 userport::userport(QObject *parent)
     : QObject{parent}
 {
-
     connect(mTxQTimer, &QTimer::timeout, this, &userport::timer1ms);
     connect(mSerial, &QSerialPort::readyRead, this,&userport::recevice);
     connect(mRxQTimer, &QTimer::timeout, this, &userport::rxend);
@@ -88,13 +87,20 @@ void userport::timer1ms()
     sendtype++;
     if(sendtype > CMD_PRD_TABL_SIZE){
         sendtype = 1;
-        iDestination++;
+//        iDestination++;
+        onlinemode[iDestination]++;
         if(iDestination >= MODE_NUM){
-            iDestination = 1;
+            iDestination = 0;
         }
     }
 
-    sendbuf[DESTINATION] = iDestination;
+    if(onlinemode[iDestination]>2){
+        memset(&m_ups_waring[iDestination], 0, sizeof(m_ups_waring[iDestination])); //离线清数据
+        memset(&m_ups_state[iDestination], 0, sizeof(m_ups_state[iDestination]));
+        memset(&m_ups_analog[iDestination], 0, sizeof(m_ups_analog[iDestination]));
+    }
+
+    sendbuf[DESTINATION] = iDestination + 1;
     sendbuf[FUNCODE] = FUNTION_QUERY_CODE;
     sendbuf[DATA_HIGHT] = 0;
     switch (sendtype) {
@@ -107,7 +113,6 @@ void userport::timer1ms()
         break;
 
     case 2:
-        memset(&m_ups_state[iDestination], 0, sizeof(m_ups_state[iDestination]));
         sendbuf[ADDR_HIGHT] = STATUS1_REG_ADDR>>8;
         sendbuf[ADDR_LOW] = (uint8_t)STATUS1_REG_ADDR;
         sendbuf[DATA_LOW] = STATE_LEN;
@@ -115,7 +120,6 @@ void userport::timer1ms()
         break;
 
     case 3:
-        memset(&m_ups_analog[iDestination], 0, sizeof(m_ups_analog[iDestination]));
         sendbuf[ADDR_HIGHT] = IN_VOLT_A_REG_ADDR>>8;
         sendbuf[ADDR_LOW] = (uint8_t)IN_VOLT_A_REG_ADDR;
         sendbuf[DATA_LOW] = ANALOG_LEN;

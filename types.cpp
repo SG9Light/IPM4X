@@ -8,3 +8,4 @@ _UPS_ANALOG_T m_ups_analog[MODE_NUM];
 //Set Global data
 int upsmodeordinal = 0;
 QString updatatime[MODE_NUM];
+uint8_t onlinemode[MODE_NUM];

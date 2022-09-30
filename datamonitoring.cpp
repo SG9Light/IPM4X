@@ -11,7 +11,9 @@ datamonitoring::datamonitoring(QWidget *parent) :
     disptableinit();
     modelboxinit();
 
-    ui->mpoll_progressBar->setMaximum(MODE_NUM-1);
+    ui->mpoll_progressBar->setMaximum(MODE_NUM);
+    connect(ref, &QTimer::timeout, this, &datamonitoring::upsupdata);
+    ref->start(1000);
 }
 
 datamonitoring::~datamonitoring()
@@ -24,7 +26,7 @@ void datamonitoring::modelboxinit()
     ui->datatype_comboBox->addItem("请选择");
 
     QStringList modelnum;
-    for (int var = 0; var < MODE_NUM - 1; ++var) {
+    for (int var = 0; var < MODE_NUM; ++var) {
         modelnum << tr("模块%1").arg(var + 1);
     }
     ui->modenum_comboBox->addItems(modelnum);
@@ -628,53 +630,54 @@ void datamonitoring::dispanalog(int modelnum)
     float tempa = 0;
     QString time = updatatime[modelnum];
 
-    tempa = m_ups_analog[modelnum].InPhaseVlt.u16Phase_a/10;
+    tempa = (float)m_ups_analog[modelnum].InPhaseVlt.u16Phase_a/10;
     appendOneRow(0, "输入电压A",tempa, "V",time);
-    tempa = m_ups_analog[modelnum].InPhaseVlt.u16Phase_b/10;
+    tempa = (float)m_ups_analog[modelnum].InPhaseVlt.u16Phase_b/10;
     appendOneRow(1, "输入电压B",tempa, "V",time);
-    tempa = m_ups_analog[modelnum].InPhaseVlt.u16Phase_c/10;
+    tempa = (float)m_ups_analog[modelnum].InPhaseVlt.u16Phase_c/10;
     appendOneRow(2, "输入电压C",tempa, "V",time);
 
-    tempa = m_ups_analog[modelnum].InFreq.u16Self/100;
+    tempa = (float)m_ups_analog[modelnum].InFreq.u16Self/100;
     appendOneRow(3, "输入频率",tempa, "Hz",time);
 
-    tempa = m_ups_analog[modelnum].InPhaseCurr.u16Phase_a/100;
+    tempa = (float)m_ups_analog[modelnum].InPhaseCurr.u16Phase_a/100;
     appendOneRow(4, "输入电流A",tempa, "A",time);
-    tempa = m_ups_analog[modelnum].InPhaseCurr.u16Phase_b/100;
+    tempa = (float)m_ups_analog[modelnum].InPhaseCurr.u16Phase_b/100;
     appendOneRow(5, "输入电流B",tempa, "A",time);
-    tempa = m_ups_analog[modelnum].InPhaseCurr.u16Phase_c/100;
+    tempa = (float)m_ups_analog[modelnum].InPhaseCurr.u16Phase_c/100;
     appendOneRow(6, "输入电流C",tempa, "A",time);
 
-    tempa = m_ups_analog[modelnum].InBatVlt.u16Self/10;
+    tempa = m_ups_analog[modelnum].InBatVlt.u16Self;
+    if(tempa >= 32768)tempa = -((65536 - tempa)/10);
     appendOneRow(7, "电池电压",tempa, "V",time);
     tempa = m_ups_analog[modelnum].InBatCurr.u16Self/100;
     appendOneRow(8, "电池电流",tempa, "A",time);
 
-    tempa = m_ups_analog[modelnum].InBypVlt.u16Self/10;
+    tempa = (float)m_ups_analog[modelnum].InBypVlt.u16Self/10;
     appendOneRow(9, "旁路电压",tempa, "V",time);
-    tempa = m_ups_analog[modelnum].InBypFreq.u16Self/100;
+    tempa = (float)m_ups_analog[modelnum].InBypFreq.u16Self/100;
     appendOneRow(10, "旁路频率",tempa, "Hz",time);
 
-    tempa = m_ups_analog[modelnum].OutVlt.u16Self/10;
+    tempa = (float)m_ups_analog[modelnum].OutVlt.u16Self/10;
     appendOneRow(11, "输出电压",tempa, "V",time);
-    tempa = m_ups_analog[modelnum].OutCur.u16Self/100;
+    tempa = (float)m_ups_analog[modelnum].OutCur.u16Self/100;
     appendOneRow(12, "输出电流",tempa, "A",time);
-    tempa = m_ups_analog[modelnum].OutFreq.u16Self/100;
+    tempa = (float)m_ups_analog[modelnum].OutFreq.u16Self/100;
     appendOneRow(13, "输出频率",tempa, "Hz",time);
 
-    tempa = m_ups_analog[modelnum].OutApparentPwr.u16Self;
+    tempa = (float)m_ups_analog[modelnum].OutApparentPwr.u16Self;
     appendOneRow(14, "视在功率",tempa, "W",time);
-    tempa = m_ups_analog[modelnum].OutActPwr.u16Self;
+    tempa = (float)m_ups_analog[modelnum].OutActPwr.u16Self;
     appendOneRow(15, "有功功率",tempa, "W",time);
-    tempa = m_ups_analog[modelnum].LoadRate.u16Self;
+    tempa = (float)m_ups_analog[modelnum].LoadRate.u16Self;
     appendOneRow(16, "负载百分比",tempa, "%",time);
-    tempa = m_ups_analog[modelnum].Temperature.u16Self;
+    tempa = (float)m_ups_analog[modelnum].Temperature.u16Self;
     appendOneRow(17, "模块温度",tempa, "℃",time);
     tempa = m_ups_analog[modelnum].DcBusP.u16Self*380/4096;
     appendOneRow(18, "正母线电压",tempa, "V",time);
     tempa = m_ups_analog[modelnum].DcBusN.u16Self*380/4096;
     appendOneRow(19, "负母线电压",tempa, "V",time);
-    tempa = m_ups_analog[modelnum].AgingRate.u16Self/10;
+    tempa = (float)m_ups_analog[modelnum].AgingRate.u16Self/10;
     appendOneRow(20, "模块老化率",tempa, "%",time);
 }
 
@@ -695,7 +698,7 @@ void datamonitoring::onealarmmonitor(QString name)
     QString str;
 
     if(name == "风扇故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bFanFaultshow;
@@ -707,7 +710,7 @@ void datamonitoring::onealarmmonitor(QString name)
         }
     }
     else if(name == "母线高压异常"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bDCHighAbnormal;
@@ -720,7 +723,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "逆变器故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bInvFault;
@@ -733,7 +736,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "过温故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bOVTMP;
@@ -746,7 +749,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "短路故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bShortFault;
@@ -759,7 +762,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "放电器故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bDischgFault;
@@ -772,7 +775,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "整流器故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bRecFault;
@@ -785,7 +788,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "电池反接"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bBattStUpInverse;
@@ -798,7 +801,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "直流母线电压低"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bDCLowAbnormal;
@@ -811,7 +814,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "硬件检测母线电压高"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bBusOVPAbnormal;
@@ -824,7 +827,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "输出过载延时到"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bInvOvloadTimeout;
@@ -837,7 +840,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "输出过载告警标志"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bOvload;
@@ -850,7 +853,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "电池电压低"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bBattLowFault;
@@ -863,7 +866,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "电池高压故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bBattHighFault;
@@ -876,7 +879,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "主机CANA故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bMasterCANAFault;
@@ -889,7 +892,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "CANA故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word1.bCANAFault;
@@ -903,7 +906,7 @@ void datamonitoring::onealarmmonitor(QString name)
     }
 
     else if(name == "主路正常"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bMainOk;
@@ -916,7 +919,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "交流电压"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bVin;
@@ -932,7 +935,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "交流频率"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bFin;
@@ -946,7 +949,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "旁路电压"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bVbp;
@@ -960,7 +963,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "旁路频率"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bFbp;
@@ -974,7 +977,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "并机地址冲突"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bParaAddOverlap;
@@ -987,7 +990,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "切换次数到"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bSwitchTimesClamp;
@@ -1000,7 +1003,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "均流故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bParaCurShareFault;
@@ -1013,7 +1016,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "放电器软起故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word2.bDischgFaultSoftSt;
@@ -1026,7 +1029,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "放电器直流母线高"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bDischgFaultDCbusHigh;
@@ -1039,7 +1042,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "放电器直流母线低"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bDischgFaultDCbusLow;
@@ -1052,7 +1055,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "放电器直流母线短路"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bDischgFaultDCbusShort;
@@ -1065,7 +1068,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "整流直流母线高"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bRecFaultHigh;
@@ -1078,7 +1081,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "整流直流母线低"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bRecFaultLow;
@@ -1091,7 +1094,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "被动软起失败"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bPassiveSSDCAbnormal;
@@ -1104,7 +1107,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "主动软起失败"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bActiveSSDCAbnormal;
@@ -1117,7 +1120,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "辅助电源故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bAuxPowerFault;
@@ -1130,7 +1133,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "高频同步信号故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bCarrierSyncFault;
@@ -1143,7 +1146,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "工频同步信号故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bInvLowSyncFault;
@@ -1156,7 +1159,7 @@ void datamonitoring::onealarmmonitor(QString name)
 
     }
     else if(name == "单三相故障"){
-        for ( i = 0; i < MODE_NUM-1; ++i) {
+        for ( i = 0; i < MODE_NUM; ++i) {
             time = updatatime[i];
 
             tempa = m_ups_waring[i].word3.bPhaseOutFault;
@@ -1541,151 +1544,133 @@ void datamonitoring::oneanalogmonitor(QString name)
     if(name == "输入电压A"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InPhaseVlt.u16Phase_a/10;
+            tempa = (float)m_ups_analog[i].InPhaseVlt.u16Phase_a/10;
             appendOneRow(i,"输入电压A",tempa, "V",time);
         }
     }
     else if(name == "输入电压B"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InPhaseVlt.u16Phase_b/10;
+            tempa = (float)m_ups_analog[i].InPhaseVlt.u16Phase_b/10;
             appendOneRow(i, "输入电压B",tempa, "V",time);
         }
     }
     else if(name == "输入电压C"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InPhaseVlt.u16Phase_c/10;
+            tempa = (float)m_ups_analog[i].InPhaseVlt.u16Phase_c/10;
             appendOneRow(i, "输入电压C",tempa, "V",time);
         }
     }
     else if(name == "输入频率"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InFreq.u16Self/100;
+            tempa = (float)m_ups_analog[i].InFreq.u16Self/100;
             appendOneRow(i, "输入频率",tempa, "Hz",time);
         }
     }
     else if(name == "输入电流A"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InPhaseCurr.u16Phase_a/100;
+            tempa = (float)m_ups_analog[i].InPhaseCurr.u16Phase_a/100;
             appendOneRow(i, "输入电流A",tempa, "A",time);
         }
     }
     else if(name == "输入电流B"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InPhaseCurr.u16Phase_b/100;
+            tempa = (float)m_ups_analog[i].InPhaseCurr.u16Phase_b/100;
             appendOneRow(i, "输入电流B",tempa, "A",time);
         }
     }
     else if(name == "输入电流C"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InPhaseCurr.u16Phase_c/100;
+            tempa = (float)m_ups_analog[i].InPhaseCurr.u16Phase_c/100;
             appendOneRow(i, "输入电流C",tempa, "A",time);
         }
     }
     else if(name == "电池电压"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InBatVlt.u16Self/10;
+            tempa = m_ups_analog[i].InBatVlt.u16Self;
+            if(tempa >= 32768)tempa = -((65536 - tempa)/10);
             appendOneRow(i, "电池电压",tempa, "V",time);
         }
     }
     else if(name == "电池电流"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InBatCurr.u16Self/100;
+            tempa = (float)m_ups_analog[i].InBatCurr.u16Self/100;
             appendOneRow(i, "电池电流",tempa, "A",time);
         }
     }
     else if(name == "旁路电压"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InBypVlt.u16Self/10;
+            tempa = (float)m_ups_analog[i].InBypVlt.u16Self/10;
             appendOneRow(i, "旁路电压",tempa, "V",time);
         }
     }
     else if(name == "旁路频率"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].InBypFreq.u16Self/100;
+            tempa = (float)m_ups_analog[i].InBypFreq.u16Self/100;
             appendOneRow(i, "旁路频率",tempa, "Hz",time);
         }
     }
     else if(name == "输出电压"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].OutVlt.u16Self/10;
+            tempa = (float)m_ups_analog[i].OutVlt.u16Self/10;
             appendOneRow(i, "输出电压",tempa, "V",time);
         }
     }
     else if(name == "输出电流"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].OutCur.u16Self/100;
+            tempa = (float)m_ups_analog[i].OutCur.u16Self/100;
             appendOneRow(i, "输出电流",tempa, "A",time);
         }
     }
     else if(name == "输出频率"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].OutFreq.u16Self/100;
+            tempa = (float)m_ups_analog[i].OutFreq.u16Self/100;
             appendOneRow(i, "输出频率",tempa, "Hz",time);
         }
     }
     else if(name == "视在功率"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].OutApparentPwr.u16Self;
+            tempa = (float)m_ups_analog[i].OutApparentPwr.u16Self;
             appendOneRow(i, "视在功率",tempa, "W",time);
         }
     }
     else if(name == "有功功率"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].OutActPwr.u16Self;
+            tempa = (float)m_ups_analog[i].OutActPwr.u16Self;
             appendOneRow(i, "有功功率",tempa, "W",time);
         }
     }
     else if(name == "负载百分比"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].LoadRate.u16Self;
+            tempa = (float)m_ups_analog[i].LoadRate.u16Self;
             appendOneRow(i, "负载百分比",tempa, "%",time);
         }
     }
     else if(name == "模块温度"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].Temperature.u16Self;
+            tempa = (float)m_ups_analog[i].Temperature.u16Self;
             appendOneRow(i, "模块温度",tempa, "℃",time);
         }
     }
     else if(name == "正母线电压"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
             tempa = m_ups_analog[i].DcBusP.u16Self*380/4096;
             appendOneRow(i, "正母线电压",tempa, "V",time);
         }
@@ -1693,7 +1678,6 @@ void datamonitoring::oneanalogmonitor(QString name)
     else if(name == "负母线电压"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
             tempa = m_ups_analog[i].DcBusN.u16Self*380/4096;
             appendOneRow(i, "负母线电压",tempa, "V",time);
         }
@@ -1701,8 +1685,7 @@ void datamonitoring::oneanalogmonitor(QString name)
     else if(name == "模块老化率AgingRate"){
         for ( i = 0; i < MODE_NUM-1; ++i) {
             time = updatatime[i];
-
-            tempa = m_ups_analog[i].AgingRate.u16Self/10;
+            tempa = (float)m_ups_analog[i].AgingRate.u16Self/10;
             appendOneRow(i, "模块老化率",tempa, "%",time);
         }
     }
