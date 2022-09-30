@@ -87,7 +87,7 @@ void userport::timer1ms()
     sendtype++;
     if(sendtype > CMD_PRD_TABL_SIZE){
         sendtype = 1;
-//        iDestination++;
+        iDestination++;
         onlinemode[iDestination]++;
         if(iDestination >= MODE_NUM){
             iDestination = 0;
